@@ -40,7 +40,7 @@ Installation
 ssh gpadmin@mdw; sudo bash
 
 2. Download the tpcds.sh file
-curl https://raw.githubusercontent.com/pivotalguru/TPC-DS/master/tpcds.sh > tpcds.sh
+curl https://raw.githubusercontent.com/diarworld/TPC-DS/master/tpcds.sh > tpcds.sh
 chmod 755 tpcds.sh
 
 ########################################################################################
