@@ -53,9 +53,9 @@ get_version()
 	if [[ "$VERSION" == *"gpdb"* ]]; then
 		zstd_test=$(psql -v ON_ERROR_STOP=1 -t -A -c "SELECT COUNT(*) FROM pg_compression WHERE compname = 'zstd'")
 		if [ "$zstd_test" -eq "1" ]; then
-			SMALL_STORAGE="appendonly=true, orientation=column"
-			MEDIUM_STORAGE="appendonly=true, orientation=column, compresstype=zstd, blocksize=32768"
-			LARGE_STORAGE="appendonly=true, orientation=column, compresstype=zstd, blocksize=32768"
+			SMALL_STORAGE="appendonly=true, orientation=column, blocksize=4096"
+			MEDIUM_STORAGE="appendonly=true, orientation=column, compresstype=zstd, blocksize=4096"
+			LARGE_STORAGE="appendonly=true, orientation=column, compresstype=zstd, blocksize=4096"
 		else
 			SMALL_STORAGE="appendonly=true, orientation=column"
 			MEDIUM_STORAGE="appendonly=true, orientation=column"
