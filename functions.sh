@@ -54,7 +54,7 @@ get_version()
 		zstd_test=$(psql -v ON_ERROR_STOP=1 -t -A -c "SELECT COUNT(*) FROM pg_compression WHERE compname = 'zstd'")
 		if [ "$zstd_test" -eq "1" ]; then
 			SMALL_STORAGE="appendonly=true, orientation=column"
-			MEDIUM_STORAGE="appendonly=true, orientation=column, compresstype=zstd, blocksize=32768"
+			MEDIUM_STORAGE="appendonly=true, orientation=column"
 			LARGE_STORAGE="appendonly=true, orientation=column, compresstype=zstd, blocksize=32768"
 		else
 			SMALL_STORAGE="appendonly=true, orientation=column"
