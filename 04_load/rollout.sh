@@ -39,6 +39,7 @@ start_gpfdist()
 {
 	stop_gpfdist
 	sleep 1
+	get_gpfdist_port
 	if [ "$VERSION" == "gpdb_6" ]; then
 		for i in $(psql -v ON_ERROR_STOP=1 -q -A -t -c "select rank() over(partition by g.hostname order by g.datadir), g.hostname, g.datadir from gp_segment_configuration g where g.content >= 0 and g.role = 'p' order by g.hostname"); do
 			CHILD=$(echo $i | awk -F '|' '{print $1}')
@@ -130,6 +131,25 @@ if [[ "$VERSION" == *"gpdb"* ]]; then
 	start_log
 	#Analyze schema using analyzedb
 	analyzedb -d $dbname -s tpcds --full -a
+
+	#make sure root stats are gathered
+	if [ "$VERSION" == "gpdb_6" ]; then
+		for t in $(psql -v ON_ERROR_STOP=1 -q -t -A -c "select n.nspname, c.relname from pg_class c join pg_namespace n on c.relnamespace = n.oid left outer join (select starelid from pg_statistic group by starelid) s on c.oid = s.starelid join (select tablename from pg_partitions group by tablename) p on p.tablename = c.relname where n.nspname = 'tpcds' and s.starelid is null order by 1, 2"); do
+			schema_name=$(echo $t | awk -F '|' '{print $1}')
+			table_name=$(echo $t | awk -F '|' '{print $2}')
+			echo "Missing root stats for $schema_name.$table_name"
+			echo "psql -v ON_ERROR_STOP=1 -q -t -A -c \"ANALYZE ROOTPARTITION $schema_name.$table_name;\""
+			psql -v ON_ERROR_STOP=1 -q -t -A -c "ANALYZE ROOTPARTITION $schema_name.$table_name;"
+		done
+	elif [ "$VERSION" == "gpdb_5" ]; then
+		for t in $(psql -v ON_ERROR_STOP=1 -q -t -A -c "select n.nspname, c.relname from pg_class c join pg_namespace n on c.relnamespace = n.oid join pg_partitions p on p.schemaname = n.nspname and p.tablename = c.relname where n.nspname = 'tpcds' and p.partitionrank is null and c.reltuples = 0 order by 1, 2"); do
+			schema_name=$(echo $t | awk -F '|' '{print $1}')
+			table_name=$(echo $t | awk -F '|' '{print $2}')
+			echo "Missing root stats for $schema_name.$table_name"
+			echo "psql -v ON_ERROR_STOP=1 -q -t -A -c \"ANALYZE ROOTPARTITION $schema_name.$table_name;\""
+			psql -v ON_ERROR_STOP=1 -q -t -A -c "ANALYZE ROOTPARTITION $schema_name.$table_name;"
+		done
+	fi
 
 	tuples="0"
 	log $tuples
